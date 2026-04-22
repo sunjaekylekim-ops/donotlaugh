@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>😐 Don't Laugh Challenge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --panel: #111111;
+      --border: #222;
+      --accent: #ff3c3c;
+      --accent2: #ffdd00;
+      --text: #f0f0f0;
+      --muted: #555;
+      --success: #00ff88;
+      --danger: #ff3c3c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scanline overlay effect */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.07) 2px,
+        rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    header {
+      text-align: center;
+      padding: 32px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    header h1 {
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(3rem, 8vw, 6rem);
+      letter-spacing: 0.05em;
+      line-height: 1;
+      color: var(--accent2);
+      text-shadow: 4px 4px 0 var(--accent), 8px 8px 0 #000;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-top: 8px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    #status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 0.7rem;
+      padding: 6px 20px;
+      background: #0d0d0d;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    #status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background 0.3s;
+    }
+    #status-dot.loading { background: var(--accent2); animation: pulse 1s infinite; }
+    #status-dot.ready { background: var(--success); }
+    #status-dot.error { background: var(--accent); }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 0;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      gap: 20px;
+    }
+
+    @media (max-width: 800px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── MEME PANEL ── */
+    .meme-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 460px;
+      position: relative;
+    }
+
+    .panel-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-label span.tag {
+      background: var(--accent2);
+      color: #000;
+      font-weight: 700;
+      padding: 2px 8px;
+      font-size: 0.6rem;
+    }
+
+    #meme-display {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: #000;
+      min-height: 360px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #meme-img {
+      max-width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      display: none;
+      border: 2px solid var(--border);
+    }
+
+    #meme-placeholder {
+      text-align: center;
+      color: var(--muted);
+    }
+
+    #meme-placeholder .big-emoji {
+      font-size: 5rem;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    #meme-placeholder p {
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* Laugh overlay */
+    #laugh-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 60, 60, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 10;
+      animation: flashRed 0.15s ease;
+    }
+
+    @keyframes flashRed {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    #laugh-overlay .laugh-text {
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(4rem, 12vw, 8rem);
+      color: #fff;
+      text-shadow: 4px 4px 0 #000;
+      animation: shake 0.3s ease infinite;
+      line-height: 1;
+    }
+
+    #laugh-overlay .laugh-sub {
+      font-size: 0.9rem;
+      color: #fff;
+      margin-top: 8px;
+      letter-spacing: 0.1em;
+    }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0) rotate(0deg); }
+      25% { transform: translateX(-6px) rotate(-2deg); }
+      75% { transform: translateX(6px) rotate(2deg); }
+    }
+
+    .meme-controls {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 10px 18px;
+      border: 2px solid currentColor;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+    }
+
+    .btn-primary {
+      color: var(--accent2);
+      border-color: var(--accent2);
+    }
+    .btn-primary:hover { background: var(--accent2); color: #000; }
+
+    .btn-danger {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .btn-danger:hover { background: var(--accent); color: #fff; }
+
+    .btn-ghost {
+      color: var(--muted);
+      border-color: var(--muted);
+      font-size: 0.65rem;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ── CAMERA PANEL ── */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .cam-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    #cam-container {
+      position: relative;
+      background: #000;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #webcam {
+      width: 100%;
+      display: block;
+      transform: scaleX(-1); /* mirror */
+    }
+
+    #overlay-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      transform: scaleX(-1);
+    }
+
+    #cam-placeholder {
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.7rem;
+      padding: 40px 20px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ── LAUGH METER ── */
+    .meter-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .meter-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #laugh-pct {
+      color: var(--accent2);
+      font-weight: 700;
+    }
+
+    .meter-track {
+      height: 24px;
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+
+    #laugh-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00ff88, #ffdd00, #ff3c3c);
+      transition: width 0.15s ease;
+      position: relative;
+    }
+
+    #laugh-fill::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: #fff;
+      box-shadow: 0 0 8px #fff;
+    }
+
+    .threshold-line {
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 70%;
+      width: 2px;
+      background: var(--accent);
+      z-index: 2;
+    }
+
+    .threshold-line::before {
+      content: 'FAIL';
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.55rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── SCORE PANEL ── */
+    .score-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .score-item {
+      background: #0d0d0d;
+      border: 1px solid var(--border);
+      padding: 12px;
+      text-align: center;
+    }
+
+    .score-item .val {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2.2rem;
+      line-height: 1;
+      color: var(--accent2);
+    }
+
+    .score-item .lbl {
+      font-size: 0.58rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 4px;
+    }
+
+    /* ── EXPRESSIONS MINI ── */
+    .expr-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .expr-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    .expr-row:last-child { margin-bottom: 0; }
+
+    .expr-name {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      width: 60px;
+      flex-shrink: 0;
+    }
+
+    .expr-bar-track {
+      flex: 1;
+      height: 6px;
+      background: #1a1a1a;
+      border-radius: 0;
+      overflow: hidden;
+    }
+
+    .expr-bar {
+      height: 100%;
+      background: var(--muted);
+      transition: width 0.15s ease;
+      border-radius: 0;
+    }
+
+    .expr-bar.happy { background: var(--success); }
+
+    .expr-val {
+      font-size: 0.6rem;
+      color: var(--muted);
+      width: 32px;
+      text-align: right;
+    }
+
+    /* ── MEME UPLOAD ── */
+    .upload-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    #file-input { display: none; }
+
+    .upload-drop {
+      border: 2px dashed var(--border);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .upload-drop:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── SAMPLE MEMES ── */
+    .samples-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .sample-thumb {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid transparent;
+      opacity: 0.6;
+      transition: all 0.15s;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+    }
+
+    .sample-thumb:hover, .sample-thumb.active {
+      border-color: var(--accent2);
+      opacity: 1;
+    }
+
+    /* ── CHALLENGE RESULT ── */
+    #result-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.93);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    #result-screen.win { --result-color: var(--success); }
+    #result-screen.lose { --result-color: var(--accent); }
+
+    #result-emoji { font-size: 7rem; margin-bottom: 16px; }
+
+    #result-title {
+      font-family: 'Bebas Neue', cursive;
+      font-size: clamp(3rem, 10vw, 7rem);
+      color: var(--result-color);
+      text-shadow: 4px 4px 0 #000;
+      line-height: 1;
+    }
+
+    #result-sub {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin: 16px 0 32px;
+      letter-spacing: 0.1em;
+    }
+
+    #result-stats {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+
+    .r-stat .v {
+      font-family: 'Bebas Neue', cursive;
+      font-size: 2.5rem;
+      color: var(--result-color);
+    }
+
+    .r-stat .l {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* ── LOG ── */
+    #event-log {
+      padding: 8px 16px 12px;
+      font-size: 0.6rem;
+      color: var(--muted);
+      min-height: 32px;
+      border-top: 1px solid var(--border);
+      letter-spacing: 0.05em;
+    }
+
+    #event-log span { color: var(--accent2); }
+
+    /* countdown */
+    #countdown-display {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Bebas Neue', cursive;
+      font-size: 8rem;
+      color: var(--accent2);
+      text-shadow: 4px 4px 0 #000;
+      z-index: 20;
+      pointer-events: none;
+      display: none;
+    }
+
+    /* timer bar */
+    #timer-bar-track {
+      height: 4px;
+      background: #1a1a1a;
+      width: 100%;
+    }
+    #timer-bar {
+      height: 4px;
+      background: var(--accent2);
+      width: 100%;
+      transition: width 0.1s linear;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>😐 Don't Laugh</h1>
+  <p>Computer Vision Challenge — Keep a straight face or lose</p>
+</header>
+
+<div id="status-bar">
+  <div id="status-dot" class="loading"></div>
+  <span id="status-text">Loading face detection models...</span>
+</div>
+
+<div class="main-grid">
+
+  <!-- LEFT: Meme Display -->
+  <div>
+    <div class="meme-panel">
+      <div class="panel-label">
+        Challenge Area
+        <span class="tag" id="round-tag">Round —</span>
+      </div>
+
+      <div id="meme-display">
+        <div id="meme-placeholder">
+          <span class="big-emoji">😐</span>
+          <p>Load a meme to begin</p>
+        </div>
+        <img id="meme-img" src="" alt="meme"/>
+        <div id="laugh-overlay">
+          <div class="laugh-text">HA!</div>
+          <div class="laugh-sub">YOU LAUGHED 😂</div>
+        </div>
+        <div id="countdown-display"></div>
+      </div>
+
+      <div id="timer-bar-track"><div id="timer-bar"></div></div>
+
+      <div class="meme-controls">
+        <button class="btn btn-primary" id="btn-start" disabled onclick="startChallenge()">▶ Start Challenge</button>
+        <button class="btn btn-ghost" id="btn-next" onclick="nextMeme()">Next Meme →</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('file-input').click()">＋ Upload</button>
+      </div>
+
+      <div id="event-log">Waiting for models to load...</div>
+    </div>
+
+    <!-- Upload / Samples -->
+    <div style="margin-top:16px; background: var(--panel); border: 1px solid var(--border); padding:16px;">
+      <div class="panel-label" style="padding:0 0 10px; border:none;">
+        Sample Memes
+        <span style="font-size:0.6rem; color:var(--muted);">or upload your own</span>
+      </div>
+      <input type="file" id="file-input" accept="image/*" onchange="loadUserImage(event)"/>
+      <div class="upload-drop" onclick="document.getElementById('file-input').click()">
+        📁 Drop your meme image here or click to upload
+      </div>
+      <div class="samples-grid" id="samples-grid"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Camera + Stats -->
+  <div class="side-panel">
+
+    <!-- Camera -->
+    <div class="cam-box">
+      <div class="panel-label">Webcam Feed <span class="tag" id="fps-tag">-- FPS</span></div>
+      <div id="cam-container">
+        <div id="cam-placeholder">Camera inactive<br><br>Click Start to enable</div>
+        <video id="webcam" autoplay muted playsinline></video>
+        <canvas id="overlay-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Laugh Meter -->
+    <div class="meter-box">
+      <div class="panel-label">
+        Laugh Meter
+        <span id="laugh-pct">0%</span>
+      </div>
+      <div class="meter-track">
+        <div class="threshold-line"></div>
+        <div id="laugh-fill"></div>
+      </div>
+    </div>
+
+    <!-- Expressions -->
+    <div class="expr-box">
+      <div class="panel-label" style="margin-bottom:10px;">Expressions</div>
+      <div id="expr-bars"></div>
+    </div>
+
+    <!-- Score -->
+    <div class="score-box">
+      <div class="panel-label">Score</div>
+      <div class="score-grid">
+        <div class="score-item">
+          <div class="val" id="sc-survived">0</div>
+          <div class="lbl">Survived</div>
+        </div>
+        <div class="score-item">
+          <div class="val" id="sc-failed">0</div>
+          <div class="lbl">Failed</div>
+        </div>
+        <div class="score-item">
+          <div class="val" id="sc-streak">0</div>
+          <div class="lbl">Streak 🔥</div>
+        </div>
+        <div class="score-item">
+          <div class="val" id="sc-best">0</div>
+          <div class="lbl">Best</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Result Screen -->
+<div id="result-screen">
+  <div id="result-emoji">😐</div>
+  <div id="result-title">YOU SURVIVED</div>
+  <div id="result-sub">Challenge result</div>
+  <div id="result-stats">
+    <div class="r-stat"><div class="v" id="r-time">0s</div><div class="l">Time held</div></div>
+    <div class="r-stat"><div class="v" id="r-peak">0%</div><div class="l">Peak laugh</div></div>
+  </div>
+  <button class="btn btn-primary" onclick="closeResult()">▶ Play Again</button>
+</div>
+
+<!-- face-api.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
