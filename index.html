@@ -613,6 +613,7 @@
 <div id="status-bar">
   <div id="status-dot" class="loading"></div>
   <span id="status-text">Loading face detection models...</span>
+  <span id="locale-tag" style="margin-left:auto;color:var(--accent2);font-size:0.7rem;"></span>
 </div>
 
 <div class="main-grid">
@@ -631,6 +632,7 @@
           <p>Load a meme to begin</p>
         </div>
         <img id="meme-img" src="" alt="meme"/>
+        <div id="meme-video-container" style="width:100%;"></div>
         <div id="laugh-overlay">
           <div class="laugh-text">HA!</div>
           <div class="laugh-sub">YOU LAUGHED 😂</div>
@@ -639,11 +641,13 @@
       </div>
 
       <div id="timer-bar-track"><div id="timer-bar"></div></div>
+      <div id="meme-info" style="font-size:0.6rem;color:var(--muted);padding:4px 16px;letter-spacing:0.08em;border-bottom:1px solid var(--border);min-height:20px;"></div>
 
       <div class="meme-controls">
         <button class="btn btn-primary" id="btn-start" disabled onclick="startChallenge()">▶ Start Challenge</button>
         <button class="btn btn-ghost" id="btn-next" onclick="nextMeme()">Next Meme →</button>
         <button class="btn btn-ghost" onclick="document.getElementById('file-input').click()">＋ Upload</button>
+        <div id="live-timer" style="font-family:'Bebas Neue',cursive;font-size:2rem;color:var(--accent2);margin-left:auto;letter-spacing:0.05em;">10:00</div>
       </div>
 
       <div id="event-log">Waiting for models to load...</div>
@@ -698,22 +702,17 @@
     <div class="score-box">
       <div class="panel-label">Score</div>
       <div class="score-grid">
-        <div class="score-item">
-          <div class="val" id="sc-survived">0</div>
-          <div class="lbl">Survived</div>
+        <div class="score-item" style="grid-column:span 2">
+          <div class="val" id="sc-best" style="font-size:1.8rem">0s</div>
+          <div class="lbl">Best Survival Time ⏱</div>
         </div>
-        <div class="score-item">
+        <div class="score-item" style="grid-column:span 2">
           <div class="val" id="sc-failed">0</div>
-          <div class="lbl">Failed</div>
+          <div class="lbl">Times Failed 😂</div>
         </div>
-        <div class="score-item">
-          <div class="val" id="sc-streak">0</div>
-          <div class="lbl">Streak 🔥</div>
-        </div>
-        <div class="score-item">
-          <div class="val" id="sc-best">0</div>
-          <div class="lbl">Best</div>
-        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:#0d0d0d;border:1px solid var(--border);text-align:center;font-size:0.65rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">
+        🏆 Survive <span style="color:var(--accent2)">10 full minutes</span> to win
       </div>
     </div>
 
@@ -728,6 +727,7 @@
   <div id="result-stats">
     <div class="r-stat"><div class="v" id="r-time">0s</div><div class="l">Time held</div></div>
     <div class="r-stat"><div class="v" id="r-peak">0%</div><div class="l">Peak laugh</div></div>
+    <div class="r-stat"><div class="v" id="r-best">0s</div><div class="l">Best ever</div></div>
   </div>
   <button class="btn btn-primary" onclick="closeResult()">▶ Play Again</button>
 </div>

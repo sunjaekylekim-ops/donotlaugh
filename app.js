@@ -3,6 +3,80 @@
 // ══════════════════════════════════════════════
 
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+const GIPHY_KEY = 'i3CFDiIRjUjTABkJ3O44yx3sEHD8iD4o';
+
+// ── 로케일 감지 ──
+const userLang = navigator.language || 'en-US';
+const isKorean = userLang.startsWith('ko');
+const locale = isKorean ? 'ko' : 'en';
+
+// ── 로케일별 검색어 ──
+const MEME_QUERIES = isKorean
+  ? ['웃긴', '개웃김', '빵터짐', 'ㅋㅋㅋ', '레전드 웃긴', '코미디', '웃참']
+  : ['meme funny', 'dank meme', 'try not to laugh', 'funny fail', 'comedy', 'lol meme'];
+
+// ── 한국어 텍스트 밈 ──
+const KO_TEXT_MEMES = [
+  { label: '😭', bg: '#0a0015', color: '#ff44ff',
+    content: ['카톡 읽씹 당했을 때', '', '나: 괜찮아 바쁜가보지 뭐', '내 뇌: 너 뭔가 잘못한 거 있지?', '너 걔한테 3년 전에 뭐라했지?'] },
+  { label: '💀', bg: '#001500', color: '#44ff44',
+    content: ['엄마: 밥 먹었어?', 'me: 응', '', '실제로 먹은 것:', '물 한 모금', '과자 두 개', '후회'] },
+  { label: '🔥', bg: '#150500', color: '#ff8844',
+    content: ['시험 전날 나:', '"이번엔 진짜 공부한다"', '', '시험 전날 밤 12시:', '*유튜브 알고리즘에 납치됨*', '"조선시대 왕들 MBTI 분석"'] },
+  { label: '😤', bg: '#000015', color: '#88aaff',
+    content: ['치킨 시킬 때:', '"혼자 먹기엔 많은데"', '', '30분 후:', '뼈만 남음', '후회 없음'] },
+  { label: '🥲', bg: '#150010', color: '#ff88cc',
+    content: ['취준생 일상:', '월 - 자소서', '화 - 자소서', '수 - 멘탈 붕괴', '목 - 자소서', '금 - 유튜브로 현실도피'] },
+  { label: '😱', bg: '#0f0f00', color: '#ffee00',
+    content: ['단톡방에서', '실수로 잘못 보냈을 때', '', '"어 잘못 보냄 ㅎ"', '', '실제 심리상태:', '*지구 탈출 희망*'] },
+  { label: '🤡', bg: '#150000', color: '#ff3333',
+    content: ['다이어트 Day 1:', '"탄수화물 끊는다"', '', 'Day 1 저녁 6시:', '치킨+피자 콤보', '"내일부터 진짜로"'] },
+  { label: '😶', bg: '#001510', color: '#33ffaa',
+    content: ['알바 중 진상 손님:', '"여기 사장 불러봐요"', '', '나: (사장 부름)', '', '사장: "죄송합니다"', '나: (속으로 욕 100번)'] },
+  { label: '🫠', bg: '#100015', color: '#aa44ff',
+    content: ['카페에서 노트북 펴고', '"오늘 다 끝낸다"', '', '3시간 후:', '유튜브 보다가', '커피만 4잔 마심', '노트북은 장식품'] },
+  { label: '💸', bg: '#051500', color: '#88ff44',
+    content: ['월급날:', '"이번 달엔 저축한다"', '', '월급날+3일:', '잔액: 3,200원', '"어디 갔지...?"'] },
+  { label: '🧠', bg: '#050015', color: '#88aaff',
+    content: ['자려고 누웠을 때', '뇌가 재생하는 것:', '', '초등학교 때 발표 실수', '중학교 때 넘어진 것', '고등학교 때 고백 거절', '대학교 때 술자리 흑역사'] },
+  { label: '😔', bg: '#100005', color: '#ffaa33',
+    content: ['친구한테 고민 털어놓기:', '"나 요즘 좀 힘들어"', '', '친구: "나도ㅋㅋ 그나저나"', '친구: (자기 얘기 30분)'] },
+];
+
+// ── 영어 텍스트 밈 ──
+const EN_TEXT_MEMES = [
+  { label: '💀', bg: '#0a0010', color: '#ff44ff',
+    content: ['me: i should sleep', 'my brain at 3am:', '"remember when you tripped', 'in front of everyone', 'in 7th grade?"'] },
+  { label: '😭', bg: '#001500', color: '#44ff44',
+    content: ['interviewer: greatest weakness?', 'me: im too honest', 'interviewer: i dont think', "that's a weakness", 'me: i dont care what you think'] },
+  { label: '🔥', bg: '#150500', color: '#ff8844',
+    content: ['"how are you?"', '', 'me: im fine', '', '*internal screaming*', '*crying in 4 languages*', '*currently on fire*'] },
+  { label: '😤', bg: '#000015', color: '#4488ff',
+    content: ['doctor: you have 5 minutes', 'me: to live??', 'doctor: to decide', 'me: oh thank god', 'doctor: you owe $47,000'] },
+  { label: '🥲', bg: '#150010', color: '#ff88cc',
+    content: ['me: finally fixing', 'my sleep schedule', 'youtube at 2am:', '"ranking every cheese', 'by how betrayed they feel"'] },
+  { label: '😱', bg: '#0f0f00', color: '#ffee00',
+    content: ['boss: why are you late', 'me: traffic', 'boss: you work from home', 'me:', 'me: emotional traffic'] },
+  { label: '🤡', bg: '#150000', color: '#ff3333',
+    content: ['anxiety: what if—', 'me: no', 'anxiety: but—', 'me: NO', 'anxiety: what if everything', 'goes wrong forever though'] },
+  { label: '😶', bg: '#001510', color: '#33ffaa',
+    content: ['my dog: *exists*', 'me: oh my GOD', 'you are SO good', 'you are the BEST boy', 'my coworker: good morning', 'me: hey'] },
+];
+
+const FALLBACK_MEMES = isKorean ? KO_TEXT_MEMES : EN_TEXT_MEMES;
+
+// ── 유튜브 영상 (한국/영어) ──
+const YT_VIDEOS = isKorean ? [
+  'S5HcnAFoNT8', // 개그콘서트 레전드
+  '3DFbFBfNNjk', // 웃긴 동물
+  'XRyFDhvOFB0', // 빵터지는 영상
+  'PKtnafFtfEo', // 한국 웃긴 순간
+] : [
+  'hY7m5jjJ9mM', // try not to laugh
+  'XqZsoesa55w', // funny fails
+  'KkYoMFUKH6k', // comedy
+  'aEFd4QBEhyc', // meme compilation
+];
 
 // ── State ──
 const state = {
@@ -11,7 +85,7 @@ const state = {
   isRunning: false,
   currentMemeIndex: 0,
   laughThreshold: 0.70,
-  challengeDuration: 10 * 60 * 1000, // 10 minutes to WIN
+  challengeDuration: 10 * 60 * 1000,
   challengeTimer: null,
   challengeStart: null,
   failed: 0,
@@ -19,62 +93,10 @@ const state = {
   peakLaugh: 0,
   roundActive: false,
   fpsCounter: { frames: 0, last: Date.now() },
-  userImages: [],
-  redditMemes: [],
+  giphyMemes: [],
   memeRotateTimer: null,
+  currentType: 'text', // 'text' | 'gif' | 'video'
 };
-
-// ── Fallback text memes (much funnier) ──
-const FALLBACK_MEMES = [
-  {
-    label: '💀', bg: '#0a0010', color: '#ff44ff',
-    content: ['me: i should go to sleep', 'my brain at 3am:', '"remember when you tripped', 'in front of everyone', 'in 7th grade?"'],
-  },
-  {
-    label: '😭', bg: '#001500', color: '#44ff44',
-    content: ['interviewer: whats ur', 'greatest weakness', 'me: im too honest', 'interviewer: i dont think', "thats a weakness", 'me: i dont care what', 'you think'],
-  },
-  {
-    label: '🔥', bg: '#150500', color: '#ff8844',
-    content: ['"how are you?"', '', 'me: im fine', '', '*internal screaming*', '*crying in 4 languages*', '*currently on fire*'],
-  },
-  {
-    label: '😤', bg: '#000015', color: '#4488ff',
-    content: ['doctor: you have 5 minutes', 'me: to live??', 'doctor: to decide', 'me: oh thank god', 'doctor: you owe $47,000'],
-  },
-  {
-    label: '🥲', bg: '#150010', color: '#ff88cc',
-    content: ['me: finally fixing', 'my sleep schedule', 'youtube at 2am:', '"ranking every cheese', 'by how betrayed they feel"'],
-  },
-  {
-    label: '😱', bg: '#0f0f00', color: '#ffee00',
-    content: ['boss: why are you late', 'me: traffic', 'boss: you work from home', 'me:', 'me: emotional traffic'],
-  },
-  {
-    label: '🤡', bg: '#150000', color: '#ff3333',
-    content: ['anxiety: what if—', 'me: no', 'anxiety: but—', 'me: NO', 'anxiety: ok but what if', 'everything goes wrong', 'forever though'],
-  },
-  {
-    label: '😶', bg: '#001510', color: '#33ffaa',
-    content: ['my dog: *exists*', 'me: oh my GOD', 'you are SO good', 'you are the BEST boy', 'my coworker: good morning', 'me: hey'],
-  },
-  {
-    label: '🫠', bg: '#100015', color: '#aa44ff',
-    content: ['5yo me breaking', 'something:', '"nobody saw that"', '', '25yo me breaking', 'something:', '"nobody saw that"'],
-  },
-  {
-    label: '💸', bg: '#051500', color: '#88ff44',
-    content: ['bank account: $4.27', 'doordash: free delivery', 'on orders over $15!', 'me: *orders $47 of food*', 'me: i am saving money'],
-  },
-  {
-    label: '🧠', bg: '#050015', color: '#88aaff',
-    content: ['my brain during a test:', 'blank', '', 'my brain at 3am:', '"the square root of', 'every embarrassing thing', 'you did since 2006"'],
-  },
-  {
-    label: '😔', bg: '#100005', color: '#ffaa33',
-    content: ['friend: you ok?', 'me: im fine lol', '', 'also me internally:', '*titanic sinking music*', '*404 error*', '*windows shutdown sound*'],
-  },
-];
 
 const EXPRESSIONS = ['happy', 'surprised', 'neutral', 'sad', 'angry', 'fearful', 'disgusted'];
 
@@ -85,52 +107,54 @@ const EXPRESSIONS = ['happy', 'surprised', 'neutral', 'sad', 'angry', 'fearful',
 async function init() {
   setStatus('loading', 'Loading AI face detection models...');
   renderExprBars();
-  await loadRedditMemes();
+
+  // 로케일 표시
+  document.getElementById('locale-tag').textContent = isKorean ? '🇰🇷 한국어 모드' : '🇺🇸 English Mode';
+
+  await loadGiphyMemes();
   showCurrentMeme();
 
   try {
     await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
     await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-    setStatus('ready', 'Models loaded — Click Start Challenge!');
-    log('✓ Models loaded. <span>10 minutes. No laughing. Good luck.</span>');
+    setStatus('ready', isKorean ? '준비 완료 — 시작 버튼을 눌러봐!' : 'Models loaded — Click Start!');
+    log(isKorean
+      ? '✓ AI 로드 완료. <span>10분 동안 웃지 마세요. 화이팅!</span>'
+      : '✓ Models loaded. <span>10 minutes. No laughing. Good luck.</span>');
     document.getElementById('btn-start').disabled = false;
     state.modelsLoaded = true;
   } catch (err) {
-    setStatus('error', 'Failed to load models — check internet connection');
+    setStatus('error', 'Failed to load models');
     log(`Error: ${err.message}`);
   }
 }
 
 // ══════════════════════════════════════════════
-//  REDDIT MEME LOADER
+//  GIPHY LOADER
 // ══════════════════════════════════════════════
 
-async function loadRedditMemes() {
-  const subs = ['memes', 'dankmemes', 'funny', 'me_irl', 'AdviceAnimals'];
-  const sub = subs[Math.floor(Math.random() * subs.length)];
+async function loadGiphyMemes() {
+  const query = MEME_QUERIES[Math.floor(Math.random() * MEME_QUERIES.length)];
   try {
-    log(`Loading memes from r/${sub}...`);
-    const res = await fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=50`, {
-      headers: { 'Accept': 'application/json' }
-    });
+    log(isKorean ? `Giphy에서 "${query}" 로딩 중...` : `Loading "${query}" from Giphy...`);
+    const res = await fetch(
+      `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=30&rating=pg-13&lang=${locale}`
+    );
     const data = await res.json();
-    const posts = data.data.children
-      .map(p => p.data)
-      .filter(p =>
-        !p.is_video && !p.stickied && p.url &&
-        /\.(jpg|jpeg|png|gif|webp)$/i.test(p.url) &&
-        p.score > 500
-      )
-      .map(p => ({ url: p.url, title: p.title, score: p.score, sub: p.subreddit_name_prefixed }));
-
-    if (posts.length > 0) {
-      state.redditMemes = posts;
-      log(`✓ Loaded <span>${posts.length} memes</span> from r/${sub}`);
-    } else {
-      log('Using built-in memes (Reddit CORS blocked)');
+    if (data.data && data.data.length > 0) {
+      state.giphyMemes = data.data.map(g => ({
+        type: 'gif',
+        url: g.images.original.url,
+        mp4: g.images.original.mp4,
+        preview: g.images.fixed_height.url,
+        title: g.title,
+      }));
+      log(isKorean
+        ? `✓ Giphy에서 <span>${state.giphyMemes.length}개</span> GIF 로드 완료`
+        : `✓ Loaded <span>${state.giphyMemes.length} GIFs</span> from Giphy`);
     }
   } catch (e) {
-    log('Using built-in memes');
+    log(isKorean ? '기본 밈 사용 중' : 'Using built-in memes');
   }
   renderSampleThumbs();
 }
@@ -140,36 +164,76 @@ async function loadRedditMemes() {
 // ══════════════════════════════════════════════
 
 function getAllMemes() {
-  return [...state.redditMemes, ...FALLBACK_MEMES];
+  // 순서: GIF → 텍스트 → 유튜브 섞기
+  const mixed = [];
+  const gifs = [...state.giphyMemes];
+  const texts = [...FALLBACK_MEMES];
+  const maxLen = Math.max(gifs.length, texts.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (gifs[i]) mixed.push(gifs[i]);
+    if (texts[i]) mixed.push({ type: 'text', ...texts[i] });
+    // 5개마다 유튜브 영상 삽입
+    if (i % 5 === 4) {
+      const yt = YT_VIDEOS[Math.floor(i / 5) % YT_VIDEOS.length];
+      mixed.push({ type: 'video', videoId: yt });
+    }
+  }
+  return mixed;
 }
 
 function showCurrentMeme() {
   const all = getAllMemes();
   if (all.length === 0) return;
   const meme = all[state.currentMemeIndex % all.length];
-  if (meme.url) {
-    showImageMeme(meme.url, meme.title);
+
+  // 이전 컨텐츠 숨기기
+  document.getElementById('meme-img').style.display = 'none';
+  document.getElementById('meme-placeholder').style.display = 'none';
+  document.getElementById('meme-video-container').innerHTML = '';
+
+  if (meme.type === 'gif') {
+    showGifMeme(meme);
+  } else if (meme.type === 'video') {
+    showVideoMeme(meme.videoId);
   } else {
     renderTextMeme(meme);
   }
   updateMemeInfo(meme);
 }
 
-function showImageMeme(url, title) {
-  const img = document.getElementById('meme-img');
-  const placeholder = document.getElementById('meme-placeholder');
-  img.style.display = 'none';
-  placeholder.style.display = 'none';
-  const testImg = new Image();
-  testImg.crossOrigin = 'anonymous';
-  testImg.onload = () => { img.src = url; img.style.display = 'block'; };
-  testImg.onerror = () => { state.currentMemeIndex++; showCurrentMeme(); };
-  testImg.src = url;
+function showGifMeme(meme) {
+  // MP4 자동재생 (GIF보다 훨씬 빠름)
+  if (meme.mp4) {
+    const container = document.getElementById('meme-video-container');
+    container.innerHTML = `
+      <video autoplay loop muted playsinline
+        style="max-width:100%;max-height:400px;display:block;margin:auto;">
+        <source src="${meme.mp4}" type="video/mp4">
+      </video>`;
+    state.currentType = 'gif';
+  } else {
+    const img = document.getElementById('meme-img');
+    img.src = meme.url;
+    img.style.display = 'block';
+  }
+}
+
+function showVideoMeme(videoId) {
+  const container = document.getElementById('meme-video-container');
+  container.innerHTML = `
+    <iframe
+      width="100%" height="380"
+      src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&rel=0"
+      frameborder="0"
+      allow="autoplay; encrypted-media"
+      allowfullscreen
+      style="display:block;">
+    </iframe>`;
+  state.currentType = 'video';
 }
 
 function renderTextMeme(meme) {
   const img = document.getElementById('meme-img');
-  document.getElementById('meme-placeholder').style.display = 'none';
   const canvas = document.createElement('canvas');
   canvas.width = 640; canvas.height = 420;
   const ctx = canvas.getContext('2d');
@@ -184,15 +248,15 @@ function renderTextMeme(meme) {
   ctx.globalAlpha = 0.15; ctx.lineWidth = 3;
   ctx.strokeRect(8, 8, 624, 404);
   ctx.globalAlpha = 1;
-
   ctx.fillStyle = meme.color || '#ffdd00';
   ctx.textAlign = 'center';
+
   const lines = meme.content;
   const lineH = lines.length > 5 ? 42 : lines.length > 3 ? 50 : 60;
   const startY = (420 - lines.length * lineH) / 2 + lineH * 0.75;
   lines.forEach((line, i) => {
     if (!line) return;
-    const fs = line.length > 35 ? 18 : line.length > 25 ? 22 : line.length > 15 ? 28 : 34;
+    const fs = line.length > 35 ? 16 : line.length > 25 ? 20 : line.length > 15 ? 26 : 32;
     ctx.font = `900 ${fs}px 'Space Mono', monospace`;
     ctx.shadowColor = 'rgba(0,0,0,0.9)'; ctx.shadowBlur = 10;
     ctx.fillText(line, 320, startY + i * lineH);
@@ -200,14 +264,15 @@ function renderTextMeme(meme) {
   ctx.shadowBlur = 0;
   img.src = canvas.toDataURL('image/png');
   img.style.display = 'block';
+  state.currentType = 'text';
 }
 
 function updateMemeInfo(meme) {
   const info = document.getElementById('meme-info');
   if (!info) return;
-  info.textContent = meme.sub
-    ? `${meme.sub} · ↑${meme.score?.toLocaleString() || ''}`
-    : 'built-in meme';
+  if (meme.type === 'gif') info.textContent = `Giphy · ${meme.title || 'GIF'}`;
+  else if (meme.type === 'video') info.textContent = `YouTube · ${isKorean ? '자동재생 영상' : 'Auto-play video'}`;
+  else info.textContent = isKorean ? '텍스트 밈' : 'Text meme';
 }
 
 function nextMeme() {
@@ -223,8 +288,10 @@ function renderSampleThumbs() {
   getAllMemes().slice(0, 12).forEach((meme, i) => {
     const el = document.createElement('div');
     el.className = 'sample-thumb' + (i === state.currentMemeIndex % 12 ? ' active' : '');
-    if (meme.url) {
-      el.style.cssText = `background:url(${meme.url}) center/cover; font-size:0`;
+    if (meme.type === 'gif' && meme.preview) {
+      el.style.cssText = `background:url(${meme.preview}) center/cover;font-size:0`;
+    } else if (meme.type === 'video') {
+      el.style.cssText = `background:url(https://img.youtube.com/vi/${meme.videoId}/default.jpg) center/cover;font-size:0`;
     } else {
       el.textContent = meme.label || '😂';
     }
@@ -242,7 +309,7 @@ function loadUserImage(event) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    state.redditMemes.unshift({ url: e.target.result, title: file.name, score: 9999 });
+    state.giphyMemes.unshift({ type: 'gif', url: e.target.result, mp4: null, preview: e.target.result, title: file.name });
     state.currentMemeIndex = 0;
     showCurrentMeme();
     renderSampleThumbs();
@@ -335,14 +402,14 @@ async function detectionLoop() {
 }
 
 // ══════════════════════════════════════════════
-//  CHALLENGE LOGIC — SURVIVE 10 MINUTES
+//  CHALLENGE LOGIC
 // ══════════════════════════════════════════════
 
 async function startChallenge() {
   if (!state.modelsLoaded) return;
 
   if (!state.cameraReady) {
-    log('Requesting camera access...');
+    log(isKorean ? '카메라 권한 요청 중...' : 'Requesting camera access...');
     const ok = await startCamera();
     if (!ok) return;
     state.isRunning = true;
@@ -356,14 +423,14 @@ async function startChallenge() {
 
   state.roundActive = true;
   state.challengeStart = Date.now();
-  log(`Challenge started — <span>survive 10 minutes without laughing!</span>`);
+  log(isKorean
+    ? `챌린지 시작! <span>10분 동안 웃지 마세요!</span>`
+    : `Challenge started — <span>survive 10 minutes!</span>`);
 
-  // Rotate meme every 20s
   state.memeRotateTimer = setInterval(() => {
     if (state.roundActive) nextMeme();
   }, 20000);
 
-  // Live timer tick
   const timerInterval = setInterval(() => {
     if (!state.roundActive) { clearInterval(timerInterval); return; }
     const elapsed = Date.now() - state.challengeStart;
@@ -372,12 +439,11 @@ async function startChallenge() {
     updateTimerBar(remaining);
   }, 500);
 
-  // WIN after 10 minutes
   state.challengeTimer = setTimeout(() => {
     if (state.roundActive) winChallenge();
   }, state.challengeDuration);
 
-  document.getElementById('btn-start').textContent = '⏳ Running...';
+  document.getElementById('btn-start').textContent = isKorean ? '⏳ 진행 중...' : '⏳ Running...';
   document.getElementById('btn-start').disabled = true;
 }
 
@@ -395,8 +461,10 @@ function triggerLaugh() {
   updateScores();
 
   const heldSec = (held / 1000).toFixed(1);
-  log(`FAILED! You laughed after <span>${heldSec}s</span> 😂`);
-  document.getElementById('btn-start').textContent = '▶ Try Again';
+  log(isKorean
+    ? `실패! <span>${heldSec}초</span> 만에 웃었어요 😂`
+    : `FAILED! You laughed after <span>${heldSec}s</span> 😂`);
+  document.getElementById('btn-start').textContent = isKorean ? '▶ 다시 시도' : '▶ Try Again';
   document.getElementById('btn-start').disabled = false;
 
   setTimeout(() => { hideLaughOverlay(); showResult(false, held); }, 1500);
@@ -407,8 +475,8 @@ function winChallenge() {
   clearInterval(state.memeRotateTimer);
   state.bestTime = state.challengeDuration;
   updateScores();
-  log(`🏆 LEGENDARY! 10 minutes survived!`);
-  document.getElementById('btn-start').textContent = '▶ Start Challenge';
+  log(isKorean ? `🏆 전설! 10분 완주!` : `🏆 LEGENDARY! 10 minutes survived!`);
+  document.getElementById('btn-start').textContent = isKorean ? '▶ 시작' : '▶ Start Challenge';
   document.getElementById('btn-start').disabled = false;
   showResult(true, state.challengeDuration);
 }
@@ -445,16 +513,17 @@ function showResult(win, timeHeld) {
   screen.className = win ? 'win' : 'lose';
   screen.style.display = 'flex';
   document.getElementById('result-emoji').textContent = win ? '🏆' : '😂';
-  document.getElementById('result-title').textContent = win ? '10 MIN SURVIVED!' : 'YOU LAUGHED!';
+  document.getElementById('result-title').textContent = win
+    ? (isKorean ? '10분 완주!' : '10 MIN SURVIVED!')
+    : (isKorean ? '웃었잖아요!' : 'YOU LAUGHED!');
   const heldSec = (timeHeld / 1000).toFixed(1);
-  const bestSec = (state.bestTime / 1000).toFixed(1);
   document.getElementById('result-sub').textContent = win
-    ? 'Absolute legend. Stone cold face. 😐'
-    : `You held it for ${heldSec}s — keep trying!`;
+    ? (isKorean ? '진정한 무표정의 달인! 😐' : 'Absolute legend. Stone cold face. 😐')
+    : (isKorean ? `${heldSec}초 버텼어요 — 다시 도전!` : `Held it for ${heldSec}s — keep trying!`);
   document.getElementById('r-time').textContent = `${heldSec}s`;
   document.getElementById('r-peak').textContent = `${Math.round(state.peakLaugh * 100)}%`;
   const bestEl = document.getElementById('r-best');
-  if (bestEl) bestEl.textContent = `${bestSec}s`;
+  if (bestEl) bestEl.textContent = `${(state.bestTime / 1000).toFixed(0)}s`;
 }
 
 function closeResult() {
@@ -484,8 +553,7 @@ function renderExprBars() {
     row.innerHTML = `
       <span class="expr-name">${expr}</span>
       <div class="expr-bar-track"><div class="expr-bar ${expr}" id="bar-${expr}" style="width:0%"></div></div>
-      <span class="expr-val" id="val-${expr}">0%</span>
-    `;
+      <span class="expr-val" id="val-${expr}">0%</span>`;
     container.appendChild(row);
   });
 }
